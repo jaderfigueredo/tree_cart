@@ -25,8 +25,8 @@ int DISPLAY_OUTS = 1;
 using namespace std;
 
 //string datasets = "/home/jader/Documentos/ambiente-dev-mestrado/Datasets/Iris/";
-string datasets = "";
-string fileName = datasets+"Iris.csv";
+string datasets = "csv/";
+string fileName = datasets+"iris.norm.csv";
 vector<string> problemClasses;
 
 // Retorna o índice do filho esquerdo
@@ -61,10 +61,10 @@ int findStringInVector(string const _key, vector<string> list) {
 	return -1;
 }
 
-string getTabs(int n = 1){
+string getTabs(int n = 1, string _char = "\t"){
 	string tabs = "";
 	while(n > 0) {
-		tabs += ".   ";
+		tabs += _char;
 		n--;
 	}
 	return tabs;
@@ -170,6 +170,8 @@ int summary(Node* root, int index = 0, int totalAcertos = 0) {
 
 int main(int argc, char** argv){
 
+	ostringstream results;
+
 	if(argc > 1) {
 		DISPLAY_OUTS = atoi(argv[1]);
 	}
@@ -178,11 +180,11 @@ int main(int argc, char** argv){
 		if(argc == 1) {
 			cout << "Você também pode passar os seguintes parametros:" << endl;
 			cout << "[1] Mostrar Saídas no terminal (1 - Sim, 0 - Não)" << endl;
-			cout << "[2] Arquivo do dataset (padrão: Iris.csv)" << endl;
+			cout << "[2] Arquivo do dataset (padrão: csv/iris.norm.csv)" << endl;
 			cout << "[3] Quantidade de atributos: (padrão: 4)" << endl;
 			cout << "[4] Quantidade de classes: (padrão: 3)" << endl;
-			cout << "[5] Classes separadas por vírgula ('Iris-setosa,Iris-versicolor,Iris-virginica')" << endl;
-			cout << "[6] Diferença mínima no melhoramento da impureza: (padrão: 0.07)" << endl;
+			cout << "[5] Classes separadas por vírgula ('0,1,2')" << endl;
+			cout << "[6] Diferença mínima no melhoramento da impureza: (padrão: 0.00000001)" << endl;
 			cout << "[7] Altura máxima da árvore: (padrão: 3)" << endl;
 			cout << endl;
 
@@ -199,8 +201,8 @@ int main(int argc, char** argv){
 	int n; // = 150; // Total de elementos
 	int PAttributes = 4; // Quantidade de atributos (deve ser)
 	int JClasses = 3; // Quantidade de classes
-	string classesInLine = "Iris-setosa,Iris-versicolor,Iris-virginica"; // Todas as possíveis classes do problema
-	float threshold = 0.07; // Mínima diferença de impureza de um nó pai para um nó filho
+	string classesInLine = "0,1,2"; // Todas as possíveis classes do problema
+	float threshold = 0.00000001; // Mínima diferença de impureza de um nó pai para um nó filho
 	int maxHeight = 3; // Altura máxima da árvore
 
 
@@ -218,33 +220,36 @@ int main(int argc, char** argv){
 	// Recebe o número de atributos
 	if(argc > 3) {
 		PAttributes = atoi(argv[3]);
-		if(DISPLAY_OUTS) { cout << "3 - Qtd. Atributos:\t" << PAttributes << endl; }
 	}
+	results << "3 - N. atributos:\t" << PAttributes << endl;
 
 	// Recebe o número de classes
 	if(argc > 4) {
 		JClasses = atoi(argv[4]);
-		if(DISPLAY_OUTS) { cout << "4 - Qtd. Classes:\t" << JClasses << endl; }
 	}
+	results << "4 - N. classes:\t" << JClasses << endl;
 
 	// Recebe o valor mínimo para a diferença do melhoramento da impureza
 	if(argc > 5) {
 		classesInLine = argv[5];
-		if(DISPLAY_OUTS) { cout << "5 - Classes separadas por vírgula:\t" << classesInLine << endl; }
 	}
+	results << "5 - Classes:\t" << classesInLine << endl;
 
 	// Recebe o valor mínimo para a diferença do melhoramento da impureza
 	if(argc > 6) {
 		threshold = stod(argv[6]);
-		if(DISPLAY_OUTS) { cout << "6 - Mínima diferença no melhoramento da impureza:\t" << threshold << endl; }
+		cout << std::fixed << std::setprecision(8);
 	}
+	results << "6 - Impureza Mínima:\t" << threshold << endl;
 
 	// Recebe o valor mínimo para a diferença do melhoramento da impureza
 	if(argc > 7) {
 		maxHeight = stod(argv[7]);
-		if(DISPLAY_OUTS) { cout << "7 - Altura máxima da árvore:\t" << maxHeight << endl; }
 	}
+	results << "7 - Altura::\t" << maxHeight << endl;
 
+
+	if(DISPLAY_OUTS){ cout << results.str(); }
 
 	// Criando um dicionário de classes
 	stringstream _lineClasses(classesInLine);
@@ -255,7 +260,7 @@ int main(int argc, char** argv){
 		_class.clear();
 	}
 
-	if(DISPLAY_OUTS) {
+	if(DISPLAY_OUTS && DEBUG) {
 		for(unsigned int i = 0; i < problemClasses.size(); i++) {
 			cout << problemClasses[i] << ",\t";
 		}
@@ -283,7 +288,7 @@ int main(int argc, char** argv){
 
 	// LENDO ARQUIVO CSV SEM ESPAÇAMENTO DEPOIS DA VÍRGULA
 	if(!arquivo.is_open()) {
-		if(DISPLAY_OUTS) { cout << "O arquivo não pode ser aberto." << endl; }
+		if(DISPLAY_OUTS && DEBUG) { cout << "O arquivo não pode ser aberto." << endl; }
 		return 0;
 	}
 
@@ -302,7 +307,7 @@ int main(int argc, char** argv){
 		line.clear();
 		getline(arquivo, line);
 
-		if(DEBUG){ cout << "Linha do arquivo: " << line << endl; }
+		if(DEBUG && DEBUG){ cout << "Linha do arquivo: " << line << endl; }
 
 		// Se encontrar uma linha em branco, seja no meio ou no fim do arquivo, continua a na próxima linha
 		// Até encontrar o fim do arquivo.
@@ -363,7 +368,7 @@ int main(int argc, char** argv){
 
 	// FIM DA LEITURA DO ARQUIVO CSV COM ESPAÇAMENTO DEPOIS DA VÍRGULA
 
-	if(DISPLAY_OUTS) { cout << "n:\t" << n << endl; }
+	if(DISPLAY_OUTS) { cout << "N. elementos encontr.:\t" << n << endl; }
 
 	if(DISPLAY_OUTS && DEBUG) {
 		cout << "Matriz de dados original:" << endl;
@@ -390,7 +395,7 @@ int main(int argc, char** argv){
 
 	// --- Fim das variáveis do problema ---
 	Problem::init(x, PAttributes, JClasses, threshold);
-	Problem::print();
+	Problem::print(results);
 
 
 	Dataset* dataset = new Dataset(x,PAttributes,JClasses);
@@ -404,7 +409,7 @@ int main(int argc, char** argv){
 	root->print(0, "root", -1, false);
 
 
-	if(DISPLAY_OUTS) {
+	if(DISPLAY_OUTS && DEBUG) {
 		cout << "Altura da árvore:\t" << Problem::hight << endl;
 		cout << "Número de galhos:\t" << Problem::numberOfBranches << endl;
 		cout << "Número de folhas:\t" << Problem::numberOfLeafs << endl;
@@ -412,23 +417,24 @@ int main(int argc, char** argv){
 		cout << endl;
 		cout << endl;
 	}
-	root->draw();
+	//root->draw();
 
 	string treeSettingsFile = "tree-settings.txt";
 	fstream treeSettingsStream;
 	treeSettingsStream.open(treeSettingsFile, fstream::out);
 	root->preOrder(treeSettingsStream);
 	if(DISPLAY_OUTS) {cout << endl << endl; }
-	root->preOrderComIndices(treeSettingsStream);
+	root->preOrderComIndices(results);
 
-	printTreeInLevels(root);
+	//printTreeInLevels(root);
 
 	summary(root);
-	Problem::print();
+	Problem::print(results);
 
 	treeSettingsStream.close();
 
 
+	if(DISPLAY_OUTS) { cout << results.str(); }
 
 	if(DISPLAY_OUTS) { cout << endl << endl; }
 

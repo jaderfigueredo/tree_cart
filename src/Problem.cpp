@@ -108,8 +108,44 @@ bool Problem::calcRatio() {
 }
 
 // Imprime o objeto Problem
-void Problem::print() {
+void Problem::print(ostringstream &results) {
+
+	/*
+	 * === FIT ==========================================
+
+		N. elementos trein.:	150
+		N. galhos:		2
+		N. folhas:		3
+		Altura real/max:	2 / 2
+		Total acertos:		144	(96.000%)
+		Total erros:		6	(4.000%)
+		Tempo gasto:		0h0min6s882ms
+
+		-----------------------------
+
+		Solução:		Optimal
+		Valor objetivo:		0.720
+		N. Variáveis:		654
+		GAP:			0.00%
+
+		-----------------------------
+
+		Parametros de entrada:
+		CSV:			csv/iris.norm.csv
+		N. Elementos:		150
+		Atributos:		4
+		Classes:		3 (0,1,2)
+		Altura max.:		2
+		Alpha:			0.30
+		Min. elem. folha:	1
+		Tempo Limite:		0h2m
+
+		==================================================
+	 */
+
 	if(DISPLAY_OUTS) {
+		results << "=== FIT ==========================================";
+
 		cout << "Número de elementos no problema:\t" << Problem::numberOfElemetsInProblem << endl;
 		cout << "Número de classes no problema:\t\t" << Problem::JClasses << endl;
 		cout << "Número de atributos no problema:\t" << Problem::PAttributes << endl;

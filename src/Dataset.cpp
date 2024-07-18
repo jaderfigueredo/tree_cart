@@ -166,7 +166,7 @@ vector<Dataset*> Dataset::findBetterSplitProfessor() {
 
 	// Verificar se os splits possíveis já foram armazenados
 	if(this->splits.size() == 0) {
-		this->findSplits(true);
+		this->findSplits(DEBUG);
 		this->calcImpurity();
 	}
 
@@ -222,7 +222,7 @@ vector<Dataset*> Dataset::findBetterSplitProfessor() {
 
 			// Se a diferença de impureza for maior que a diferença anterior, substituir a diferença.
 			//if(newRangeImpurity > rangeImpurity) {
-			if(newRangeImpurity > rangeImpurity && newRangeImpurity > Problem::threshold) {
+			if(newRangeImpurity > rangeImpurity){// && newRangeImpurity > Problem::threshold) {
 				rangeImpurity = newRangeImpurity;
 				this->splitAttribute = attr;
 				this->splitIndex = indexValue;
@@ -364,13 +364,13 @@ void Dataset::print(string label, bool showDatasets, bool imprimirElementos, int
 
 	// Se for para imprimir os elementos e o nó atual for um nó folha, então imprima-os
 	if(imprimirElementos) {
-		if(DISPLAY_OUTS) {
+		if(DISPLAY_OUTS && DEBUG) {
 			cout << endl;
 			cout << "Elementos deste nó:" << endl;
 		}
 
 		for(unsigned int xx = 0; xx < this->dataset.size(); xx++) {
-			if(DISPLAY_OUTS) {
+			if(DISPLAY_OUTS && DEBUG) {
 				cout << "["<<xx+1<<"]" << "\t";
 				for(unsigned int yy = 0; yy < this->dataset[xx].size(); yy++) {
 					if(yy == Problem::PAttributes) {
@@ -383,36 +383,36 @@ void Dataset::print(string label, bool showDatasets, bool imprimirElementos, int
 				}
 			}
 
-			if(DISPLAY_OUTS) { if(imprimirElementos) { cout << endl; } }
+			if(DISPLAY_OUTS && DEBUG) { if(imprimirElementos) { cout << endl; } }
 
 			// Contando cada acerto
 			if((int) this->dataset[xx][Problem::PAttributes] == (int) this->majoritaryClass) {
 				quantidadeAcertos++;
-				if(DISPLAY_OUTS) { cout << "Acertou"; }
+				if(DISPLAY_OUTS && DEBUG) { cout << "Acertou"; }
 			}
 			else {
-				if(DISPLAY_OUTS) { cout << "Errou"; }
+				if(DISPLAY_OUTS && DEBUG) { cout << "Errou"; }
 			}
-			if(DISPLAY_OUTS) { cout << endl; }
+			if(DISPLAY_OUTS && DEBUG) { cout << endl; }
 		}
-		if(DISPLAY_OUTS) { cout << std::setprecision(3); }
+		if(DISPLAY_OUTS && DEBUG) { cout << std::setprecision(3); }
 
 		// Imprimindo estatísticas de classificação
-		if(DISPLAY_OUTS) { cout << "Estatísticas de classificação em treinamento:" << endl; }
+		if(DISPLAY_OUTS && DEBUG) { cout << "Estatísticas de classificação em treinamento:" << endl; }
 		taxaAcertos = (this->dataset.size()) ? quantidadeAcertos * 100 / this->dataset.size() : -1;
 		quantidadeErros = (this->dataset.size()) ? this->dataset.size() - quantidadeAcertos : -1;
 		taxaErros = (this->dataset.size()) ? quantidadeErros * 100 / this->dataset.size() : -1;
 
-		if(DISPLAY_OUTS) {
+		if(DISPLAY_OUTS && DEBUG) {
 			cout << "N. erros:\t" << quantidadeErros << "\t";
 			cout << "%  erros:\t" << taxaErros << endl;
 			cout << "N. acertos:\t" << quantidadeAcertos << "\t";
 			cout << "%  acertos:\t" << taxaAcertos << endl;
 		}
 
-		if(DISPLAY_OUTS) { cout << std::setprecision(7); }
+		if(DISPLAY_OUTS && DEBUG) { cout << std::setprecision(7); }
 	}
-	if(DISPLAY_OUTS) { cout << endl; }
+	if(DISPLAY_OUTS && DEBUG) { cout << endl; }
 }
 
 
@@ -437,7 +437,7 @@ void Dataset::calcStatistics(){
 	// Calculando as proporções de elementos de cada classe contidos no subconjunto (nó) Nj/N
 	this->estimateRateOfClassElementsInNode.resize(Problem::JClasses);
 	for(unsigned int j = 0; j < this->numberOfClassElementsInNode.size(); j++) {
-		if(DISPLAY_OUTS) { cout << this->numberOfClassElementsInNode[j] << " / " << Problem::numberOfClassElementsInProblem[j] << endl; }
+		if(DISPLAY_OUTS && DEBUG) { cout << this->numberOfClassElementsInNode[j] << " / " << Problem::numberOfClassElementsInProblem[j] << endl; }
 		this->estimateRateOfClassElementsInNode[j] =
 				this->numberOfClassElementsInNode[j] / Problem::numberOfClassElementsInProblem[j];
 	}
@@ -500,6 +500,25 @@ void Dataset::printStatistics(string label) {
 	}
 }
 
+
+int Dataset::nAcertos() {
+	// Se for galho, retorna 0
+	if(this->majoritaryClass == -1) {
+		return 0;
+	}
+
+	// Se não
+	// Retorna o otal de elementos da classe do nó
+	int nAcertos = 0;
+	for(long unsigned int i = 0; i < this->dataset.size(); i++) {
+		int iClass = Problem::PAttributes+1;
+		int _class = (int) this->dataset[i][iClass];
+		if(_class == this->majoritaryClass) {
+			nAcertos++;
+		}
+	}
+	return nAcertos;
+}
 
 
 /**

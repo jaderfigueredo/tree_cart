@@ -7,6 +7,9 @@
 #include "Node.h"
 #include "Problem.h"
 
+#define BRANCH "galho"
+#define LEAF "folha"
+
 /*
 #ifndef DISPLAY_OUTS
 	#define DISPLAY_OUTS 1
@@ -26,7 +29,7 @@ extern int getLeftChild(int t);
 // Retorna o índice do filho direito
 extern int getRightChild(int t);
 
-extern string getTabs(int n = 1);
+extern string getTabs(int n = 1, string _char = "\t");
 extern int getLevelFromIndex(int index);
 
 using namespace std;
@@ -127,7 +130,7 @@ unsigned int Node::printInLevel(unsigned int i, string side, unsigned int parent
 
 unsigned int Node::print(unsigned int i, string side, unsigned int parent, bool imprimirElementos, int hight) {
 
-	if(DISPLAY_OUTS) {
+	if(DISPLAY_OUTS && DEBUG) {
 	// Imprimir os dados do nó atual
 		cout << endl;
 		cout << "Node " << ": " << i << "\t\tFilho " << side << " do " << (parent == -1 ? "--" : to_string(parent));
@@ -305,24 +308,24 @@ void Node::printStatistics(unsigned int i) {
 void Node::preOrder(fstream &treeSettingsStream, int index) {
 	string separator = " ";
 	// Imprime o identificador de início de nó e o seu índice
-	if(DISPLAY_OUTS) { cout << "(" << separator << index << separator; }
+	if(DISPLAY_OUTS && DEBUG) { cout << "(" << separator << index << separator; }
 	treeSettingsStream << "(" << separator << index << separator;
 
 	// Verifica e imprime o tipo do nó
 	if(this->left == NULL || this->right == NULL) {
-		if(DISPLAY_OUTS) { cout << "folha" << separator << "Impur:" << this->dataset->majoritaryClass << "_"<< problemClasses[this->dataset->majoritaryClass] << separator; }
+		if(DISPLAY_OUTS && DEBUG) { cout << "folha" << separator << "Impur:" << this->dataset->majoritaryClass << "_"<< problemClasses[this->dataset->majoritaryClass] << separator; }
 		treeSettingsStream << "folha" << separator << this->dataset->majoritaryClass << separator;
 	}
 	else {
-		if(DISPLAY_OUTS) {
+		if(DISPLAY_OUTS && DEBUG) {
 			cout << "galho" << separator;
 			cout << this->dataset->splitAttribute << separator;
-			cout << setprecision(7) << this->dataset->splitValue << separator;
+			cout << setprecision(16) << this->dataset->splitValue << separator;
 		}
 
 		treeSettingsStream << "galho" << separator;
 		treeSettingsStream << this->dataset->splitAttribute << separator;
-		treeSettingsStream << setprecision(7) << this->dataset->splitValue << separator;
+		treeSettingsStream << setprecision(16) << this->dataset->splitValue << separator;
 
 		// Passos recursivos: Chamar a impressão do filho esquerdo e filho direito
 		this->left->preOrder(treeSettingsStream, (index+1));
@@ -330,62 +333,141 @@ void Node::preOrder(fstream &treeSettingsStream, int index) {
 	}
 
 	// Imprime o caracter de fechamento
-	if(DISPLAY_OUTS) { cout << ")" << separator; }
+	if(DISPLAY_OUTS && DEBUG) { cout << ")" << separator; }
 	treeSettingsStream << ")" << separator;
 }
 
 
-void Node::preOrderComIndices(fstream &treeSettingsStream, int index, bool writeTreeSettings) {
-
-	if(DISPLAY_OUTS) {
-		if(writeTreeSettings) {
-			//cout << endl << "NÃO escrevendo o arquivo tree-settings.txt, apenas no terminal." << endl << endl;
-		}
-		else {
-			//cout << endl << "Escrevendo o arquivo tree-settings.txt" << endl << endl;
-		}
-	}
-
-	string separator = " ";
-	string tabs = getTabs(getLevelFromIndex(index));
-	bool isLeaf = false;
+void Node::preOrderComIndices(ostringstream &results, int index) {
+	string separator = " | ";
+	string tabs = getTabs(getLevelFromIndex(index), "  ");
 
 	// Imprime o identificador de início de nó e o seu índice
-	if(DISPLAY_OUTS) { cout << endl << tabs << "(" << separator << index << separator; }
-	if(writeTreeSettings) { treeSettingsStream << "(" << separator << index << separator; }
+
+	results << endl << tabs << "( ";
+
 
 	// Verifica e imprime o tipo do nó
 	if(this->left == NULL || this->right == NULL) {
-		if(DISPLAY_OUTS) { cout << "folha" << separator << "\tclass: " << this->dataset->majoritaryClass << "_"<< problemClasses[this->dataset->majoritaryClass] << separator; }
-		cout << "\tImpur:" << std::setprecision(7) << this->dataset->impurity;
+		results << LEAF << " " << index;
+		// Classe
+		results << separator << "class: " << this->dataset->majoritaryClass;
 
-		if(writeTreeSettings) { treeSettingsStream << "folha" << separator << this->dataset->majoritaryClass << separator; }
-		isLeaf = true;
+		int nTotal = this->dataset->dataset.size();
+		int nAcertos = this->nAcertos();
+		int nErros = nTotal - this->nAcertos();
+
+		// N. Elementos
+		results << separator  << nTotal << " elementos";
+		results << std::fixed << std::setprecision(2);
+		// Acertos	// Porcent.
+		results << separator << "Acertos: " << (float)nAcertos / (float) nTotal * 100 << "%";
+		// Erros	// Porcent.
+		results << separator << "Erros: " << (float)nErros / (float) nTotal * 100 << "%";
+		results	<< separator << "Impur: " << std::setprecision(7) << this->dataset->impurity << ")";
+
+		// Classes
+		results << std::fixed << std::setprecision(2);
+		for(unsigned int j = 0; j < this->dataset->countElementsClasses.size()/*Problem::JClasses*/; j++) {
+			int nElementosClasse = this->dataset->countElementsClasses[j];
+			float percElementos = ((float) nElementosClasse / (float) nTotal) * 100;
+			results << endl << tabs << " " << "Classe [" << j << "] = " << nElementosClasse << " elementos\t(" << percElementos << "%)";
+		}
 	}
 	else {
-		if(DISPLAY_OUTS) {
-			cout << "galho" << separator;
-			cout << "\tImpur: " << std::setprecision(7) << this->dataset->impurity;
-			cout << "\tAttr: " << this->dataset->splitAttribute << separator;
-			cout << "\tSplitVal: " << setprecision(7) << this->dataset->splitValue << separator;
-		}
-
-		if(writeTreeSettings) {
-			treeSettingsStream << "galho" << separator;
-			treeSettingsStream << this->dataset->splitAttribute << separator;
-			treeSettingsStream << setprecision(7) << this->dataset->splitValue << separator;
-		}
+		results << BRANCH << " " << index;
+		results << separator << "feat: " << this->dataset->splitAttribute;
+		results << separator << "Threshold: " << std::fixed << setprecision(16) << this->dataset->splitValue;
 
 		// Passos recursivos: Chamar a impressão do filho esquerdo e filho direito
-		this->left->preOrderComIndices(treeSettingsStream, getLeftChild(index));
-		this->right->preOrderComIndices(treeSettingsStream, getRightChild(index));
+		this->left->preOrderComIndices(results, getLeftChild(index));
+		this->right->preOrderComIndices(results, getRightChild(index));
+		results << endl << tabs << ")";
 	}
 
 	// Imprime o caracter de fechamento
-	string closer = isLeaf ? ")" : "\n"+tabs+")";
-	if(DISPLAY_OUTS) { cout << closer << separator; }
-	if(writeTreeSettings) { treeSettingsStream << ")" << separator; }
+	//string closer = isLeaf ? ")" : ;
 }
 
+
+vector<Node*> Node::getBranches() {
+	vector<Node*> branches;
+
+	if(this->left == NULL && this->right == NULL) {
+		return branches;
+	}
+
+	if(this->left != NULL) {
+		vector<Node*> branchesL = this->left->getBranches();
+		branches.insert( branches.end(), branchesL.begin(), branchesL.end() );
+	}
+
+	branches.push_back(this);
+
+	if(this->right != NULL) {
+		vector<Node*> branchesR = this->right->getBranches();
+		branches.insert( branches.end(), branchesR.begin(), branchesR.end() );
+	}
+
+	return branches;
+}
+
+
+vector<Node*> Node::getLeafs() {
+	vector<Node*> leafs;
+
+	if(this->left == NULL && this->right == NULL) {
+		leafs.push_back(this);
+		return leafs;
+	}
+
+	if(this->left != NULL) {
+		vector<Node*> leafsL = this->left->getLeafs();
+		leafs.insert( leafs.end(), leafsL.begin(), leafsL.end() );
+	}
+
+	if(this->right != NULL) {
+		vector<Node*> leafsR = this->right->getLeafs();
+		leafs.insert( leafs.end(), leafsR.begin(), leafsR.end() );
+	}
+
+	return leafs;
+}
+
+int Node::height() {
+	if(this->left == NULL && this->right == NULL) {
+		return 0;
+	}
+
+	int height = 1;
+	int heightL = 0;
+	int heightR = 0;
+
+	if(this->left != NULL) {
+		heightL = this->left->height();
+	}
+
+	if(this->right != NULL) {
+		heightR = this->right->height();
+	}
+
+	int maior = (heightL > heightR) ? heightL : heightR;
+
+	return height+maior;
+}
+
+int Node::nAcertos() {
+	int nAcertos = this->dataset->nAcertos();
+
+	if(this->left != NULL) {
+		nAcertos += this->left->nAcertos();
+	}
+
+	if(this->right != NULL) {
+		nAcertos += this->right->nAcertos();
+	}
+
+	return nAcertos;
+}
 
 

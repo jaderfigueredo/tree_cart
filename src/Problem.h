@@ -46,7 +46,7 @@ public:
 	static bool calcRatio();
 
 	// Imprime o objeto Problem
-	static void print();
+	static void print(ostringstream &results);
 
 	//
 };

@@ -84,6 +84,8 @@ public:
 	void calcStatistics();
 
 	void printStatistics(string label = "");
+
+	int nAcertos();
 };
 
 

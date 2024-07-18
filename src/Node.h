@@ -45,9 +45,17 @@ public:
 
 	void preOrder(fstream &treeSettingsStream, int index = 0);
 
-	void preOrderComIndices(fstream &treeSettingsStream, int index = 0, bool writeTreeSettings = true);
+	void preOrderComIndices(ostringstream &results, int index = 0);
 
 	void printContentForOverleafFormat(unsigned int index, string type = "");
+
+	vector<Node*> getBranches();
+
+	vector<Node*> getLeafs();
+
+	int height();
+
+	int nAcertos();
 };
 
 
